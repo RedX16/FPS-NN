@@ -4,18 +4,21 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Weapon : NetworkBehaviour
 {
     [SerializeField] CinemachineVirtualCamera virtualCamera;
     //shooting
-    [SerializeField] bool isShooting, readyToShoot;
-    bool allowReset = true;
-    [SerializeField] float shootingDelay = 2f;
+    private bool _isShooting;
+    private bool _canShoot;
+    private bool _burstFinished = true;
+    [SerializeField] float shootCooldown = 0.5f;
+    private float _currentCooldown;
 
     //Burst
     [SerializeField] int bulletsPerBurst = 3;
-    [SerializeField] int currentBurst;
+    int _currentBurst;
 
     //Spread
     [SerializeField] int spreadIntensity;
@@ -26,6 +29,8 @@ public class Weapon : NetworkBehaviour
     [SerializeField] int bulletPrefabLifeTime = 3;
 
     PlayerInput input;
+
+    private Coroutine _shootCoroutine;
 
     public enum ShootingMode
     {
@@ -41,17 +46,98 @@ public class Weapon : NetworkBehaviour
     {
         input = new PlayerInput();
         input.Player.Enable();
-        readyToShoot = true;
-        currentBurst = bulletsPerBurst;
+        _canShoot = true;
+        _currentBurst = bulletsPerBurst;
+        input.Player.PrimaryFire.started += StartShooting;
+        input.Player.PrimaryFire.canceled += StopShooting;
+        input.Player.SecondaryFire.started += CycleFireMode;
     }
+
+    private void CycleFireMode(InputAction.CallbackContext obj)
+    {
+        currentShootingMode = currentShootingMode switch
+        {
+            ShootingMode.Auto => ShootingMode.Burst,
+            ShootingMode.Burst => ShootingMode.Single,
+            ShootingMode.Single => ShootingMode.Auto,
+            _ => currentShootingMode
+        };
+    }
+
+    private void StopShooting(InputAction.CallbackContext obj)
+    {
+        _currentBurst = 0;
+
+        if(_shootCoroutine != null)
+            StopCoroutine(_shootCoroutine);
+    }
+
+    private void StartShooting(InputAction.CallbackContext obj)
+    {
+        switch (currentShootingMode)
+        {
+            case ShootingMode.Single:
+                Shoot();
+                break;
+            case ShootingMode.Burst:
+                _shootCoroutine = StartCoroutine(ShootBurst());
+                break;
+            case ShootingMode.Auto:
+                _shootCoroutine = StartCoroutine(ShootAuto());
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private IEnumerator ShootBurst()
+    {
+        while (true)
+        {
+            if (_currentBurst >= bulletsPerBurst)
+            {
+                StopShooting(new InputAction.CallbackContext());
+            }
+            else if (_canShoot)
+            {
+                Shoot();
+                _currentBurst++;
+            }
+            yield return null;
+        }
+        yield return null;
+        // ReSharper disable once IteratorNeverReturns
+    }
+
+    private IEnumerator ShootAuto()
+    {
+        while (true)
+        {
+            if (_canShoot)
+            {
+                Shoot();
+            }
+            yield return null;
+        }
+        yield return null;
+        // ReSharper disable once IteratorNeverReturns
+    }
+
+
 
     // Update is called once per frame
     void Update()
     {
         if(!IsOwner) { return; }
-        if(input.Player.PrimaryFire.ReadValue<float>() > 0)
+
+        if (!_canShoot && _currentCooldown < shootCooldown)
         {
-            Shoot();
+            _currentCooldown += Time.deltaTime;
+
+            if (_currentCooldown >= shootCooldown)
+            {
+                _canShoot = true;
+            }
         }
     }
 
@@ -67,5 +153,10 @@ public class Weapon : NetworkBehaviour
     {
         yield return new WaitForSeconds(delay);
         Destroy(bullet);
+    }
+
+    private void DetermineReadyToShoot()
+    {
+
     }
 }

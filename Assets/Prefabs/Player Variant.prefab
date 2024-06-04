@@ -276,6 +276,11 @@ PrefabInstance:
       propertyPath: virtualCamera
       value: 
       objectReference: {fileID: 6619435332736521102}
+    - target: {fileID: 8207118578585262309, guid: b2559661e4ac18e44b59abe91e2ee6f7,
+        type: 3}
+      propertyPath: playerInputControls
+      value: 
+      objectReference: {fileID: 1246312976829240575}
     m_RemovedComponents:
     - {fileID: 2912624944194098405, guid: b2559661e4ac18e44b59abe91e2ee6f7, type: 3}
     m_RemovedGameObjects:
@@ -290,6 +295,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 5261616537429078844}
+    - targetCorrespondingSourceObject: {fileID: 4838276161275171761, guid: b2559661e4ac18e44b59abe91e2ee6f7,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1246312976829240575}
   m_SourcePrefab: {fileID: 100100000, guid: b2559661e4ac18e44b59abe91e2ee6f7, type: 3}
 --- !u!4 &1639348518989630232 stripped
 Transform:
@@ -334,3 +343,18 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &1246312976829240575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6584886615539494850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 866a81a8971861546b936ef9587c352f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minViewDistance: 25
+  playerBody: {fileID: 1639348518989630232}
+  mouseSensitivity: 0.5
